@@ -1,10 +1,17 @@
+"""FILE READER"""
+
 import os
 import csv
-# from models.RecommendationsDB import RecommendationsDB
 
 DATA_FOLDER = './data'
 
 def read_ratings():
+    """Reads the CSV files and builds dict with movie ratings for all users and adds the movie title to the data.
+
+    Returns:
+        [dict] -- a Dictionary representing the ratings of all users
+    """
+
     recommendations = dict({})
     movies = dict({})
     with open(os.path.join(DATA_FOLDER, 'movies.csv'), newline='') as moviesfile:
@@ -18,7 +25,7 @@ def read_ratings():
             user_id = row['userId']
             try:
                 user = recommendations[user_id]
-            except Exception as e:
+            except KeyError:
                 user = {'userId': user_id, 'ratings': dict({})}
 
             title = movies[row['movieId']]['title']
@@ -30,3 +37,14 @@ def read_ratings():
             recommendations[user_id] = user
 
     return recommendations
+
+def read_users():
+    """Reads the users from the file and returns a list of user ids"""
+
+    users = dict({})
+    with open(os.path.join(DATA_FOLDER, 'ratings.csv'), newline='') as csvfile:
+        ratingsreader = csv.DictReader(csvfile)
+        for row in ratingsreader:
+            users[row['userId']] = {'userId': row['userId']}
+
+    return list(users.keys())
