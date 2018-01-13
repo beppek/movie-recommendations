@@ -1,10 +1,11 @@
 .App {
-  text-align: center;
+  /* text-align: center; */
 }
 
 .App-logo {
   /* animation: App-logo-spin infinite 20s linear; */
-  height: 80px;
+  height: 50px;
+  display: inline;
 }
 
 .App-header {
@@ -17,10 +18,48 @@
 
 .App-title {
   font-size: 1.5em;
+  margin-top: 0;
+  display: inline-block;
+  vertical-align: middle;
+  height: 50px;
 }
+
+.App-title-container {
+  display: block;
+}
+
+.App-menu {
+  display: inline-block;
+  width: 100%;
+}
+
+.App-menu .dropdown {
+  vertical-align: top;
+  display: inline-block;
+}
+
+.similarity-selector {
+  display: inline-block;
+}
+.similarity-selector .form {
+  display: inline;
+}
+.similarity-selector .form div {
+  display: inline;
+}
+.similarity-selector label {
+  color: #f0f0f0!important;
+}
+/* .similarity-selector .form div label {
+  display: inline;
+} */
 
 .App-intro {
   font-size: large;
+}
+
+.loader-background {
+  height: calc(100vh - 150px);
 }
 
 /* @keyframes App-logo-spin {
