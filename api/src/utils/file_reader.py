@@ -31,7 +31,7 @@ def read_ratings():
             title = movies[row['movieId']]['title']
             user['ratings'][row['movieId']] = {
                 'movieId': row['movieId'],
-                'rating': row['rating'],
+                'rating': float(row['rating']),
                 'title': title
             }
             recommendations[user_id] = user
