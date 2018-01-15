@@ -2,6 +2,7 @@
 
 import os
 import csv
+from flask import current_app
 
 DATA_FOLDER = './data'
 
@@ -12,31 +13,36 @@ def read_ratings():
         [dict] -- a Dictionary representing the ratings of all users
     """
 
-    recommendations = dict({})
-    movies = dict({})
-    with open(os.path.join(DATA_FOLDER, 'movies.csv'), newline='') as moviesfile:
-        moviesreader = csv.DictReader(moviesfile)
-        for row in moviesreader:
-            movies[row['movieId']] = {'title': row['title']}
+    ratings = dict({})
+    movies = read_movies()
 
     with open(os.path.join(DATA_FOLDER, 'ratings.csv'), newline='') as csvfile:
         ratingsreader = csv.DictReader(csvfile)
         for row in ratingsreader:
             user_id = row['userId']
             try:
-                user = recommendations[user_id]
+                user = ratings[user_id]
             except KeyError:
-                user = {'userId': user_id, 'ratings': dict({})}
+                user = dict({})
 
             title = movies[row['movieId']]['title']
-            user['ratings'][row['movieId']] = {
+            user[title] = {
                 'movieId': row['movieId'],
                 'rating': float(row['rating']),
                 'title': title
             }
-            recommendations[user_id] = user
+            ratings[user_id] = user
 
-    return recommendations
+    return ratings
+
+def read_movies():
+    movies = dict({})
+    with open(os.path.join(DATA_FOLDER, 'movies.csv'), newline='') as moviesfile:
+        moviesreader = csv.DictReader(moviesfile)
+        for row in moviesreader:
+            movies[row['movieId']] = {'title': row['title']}
+
+    return movies
 
 def read_users():
     """Reads the users from the file and returns a list of user ids"""
