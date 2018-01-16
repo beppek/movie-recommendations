@@ -52,7 +52,8 @@ def pearson_correlation(prefs, p1, p2):
     n = len(similar_items)
 
     #No ratings in common
-    if n == 0: return 0
+    if n == 0:
+        return 0
 
     #Add up prefs
     sum1 = sum([prefs[p1][item]['rating'] for item in similar_items])
@@ -76,8 +77,18 @@ def pearson_correlation(prefs, p1, p2):
     return pearson_score
 
 def top_matches(prefs, person, n = 5, similarity = euclidean_distance):
+    """Returns n top matches for a person or item
 
-    scores = [(similarity(prefs, person, other) * 5, other) for other in prefs if other != person]
+    Arguments:
+        prefs {dict} -- ratings dict
+        person {string} -- the key to the person/item in the ratings dict
+
+    Keyword Arguments:
+        n {int} -- number of matches to return (default: {5})
+        similarity {method} -- similarity method to use to find matches (default: {euclidean_distance})
+    """
+
+    scores = [(similarity(prefs, person, other), other) for other in prefs if other != person]
 
     #Sort list highest first
     scores.sort(key=lambda x: x[0])
@@ -85,7 +96,7 @@ def top_matches(prefs, person, n = 5, similarity = euclidean_distance):
 
     return scores[0:n]
 
-def get_recommendations(prefs, person, similarity, n = 1000):
+def get_recommendations(prefs, person, similarity, n = 20):
     """Gets recommendations for a user based on the given similarity measure (pearson or euclidean)
 
     Arguments:
@@ -96,7 +107,7 @@ def get_recommendations(prefs, person, similarity, n = 1000):
 
     totals = {}
     sim_sums = {}
-    # matches = top_matches(prefs, person, 100, similarity)
+
     for other in prefs:
         #Don't compare to self
         if other == person: #or other not in matches:
@@ -112,12 +123,13 @@ def get_recommendations(prefs, person, similarity, n = 1000):
 
             #only score movies the user hasn't rated
             if item not in prefs[person] or prefs[person][item]['rating'] == 0:
-                totals.setdefault(item, 0)
+                totals.setdefault(item, 0.0)
                 totals[item] += prefs[other][item]['rating'] * sim
-                sim_sums.setdefault(item, 0)
+                sim_sums.setdefault(item, 0.0)
                 sim_sums[item] += sim
 
-    rankings = [(total / sim_sums[item], item) for item, total in totals.items() if total / sim_sums[item] >= 3.5]
+    maximum = max(totals.values())
+    rankings = [(total / maximum * 5, item) for item, total in totals.items()]
 
     rankings.sort(key=lambda x: x[0])
     rankings.reverse()
