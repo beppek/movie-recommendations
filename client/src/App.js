@@ -11,12 +11,11 @@ class App extends Component {
     userId: null,
     movieId: null,
     users: [],
-    movies: [],
     value: null,
     similarity: 'euclidean',
     recommendations: null,
     loading: true,
-    filtering: 'users'
+    filtering: 'user'
   }
 
   componentDidMount() {
@@ -37,7 +36,7 @@ class App extends Component {
     const {similarity, filtering} = this.state;
     let userId = data.value;
     this.setState({loading: true});
-    API.getData(`${filtering}/${userId}/recommendations/${similarity}`)
+    API.getData(`users/${userId}/recommendations/${filtering}/${similarity}`)
       .then(data => {
         this.setState({recommendations: data.recommendations, userId, loading: false});
       })
@@ -46,34 +45,12 @@ class App extends Component {
       });
   }
 
-  selectMovie = (e, data) => {
-    const {similarity, filtering} = this.state;
-    let movieId = data.value;
-    this.setState({loading: true});
-    API.getData(`${filtering}/${movieId}/recommendations/${similarity}`)
-      .then(data => {
-        this.setState({recommendations: data.recommendations, movieId, loading: false});
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }
-
   selectSimilarity = (e, {value}) => {
-    const {userId, movieId, filtering} = this.state;
+    const {userId, filtering} = this.state;
     this.setState({similarity: value});
     if (userId) {
       this.setState({loading: true});
-      API.getData(`${filtering}/${userId}/recommendations/${value}`)
-        .then(data => {
-          this.setState({recommendations: data.recommendations, loading: false});
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    } else if (movieId) {
-      this.setState({loading: true});
-      API.getData(`${filtering}/${movieId}/recommendations/${value}`)
+      API.getData(`users/${userId}/recommendations/${filtering}/${value}`)
         .then(data => {
           this.setState({recommendations: data.recommendations, loading: false});
         })
@@ -85,26 +62,12 @@ class App extends Component {
 
   selectFiltering = (e, {value}) => {
     this.setState({filtering: value});
-    if (value === 'users') {
-      API.getData('users')
+    const {userId, similarity} = this.state;
+    if (userId) {
+      this.setState({loading: true});
+      API.getData(`users/${userId}/recommendations/${value}/${similarity}`)
         .then(data => {
-          let users = [];
-          data.forEach(user => {
-            users.push({key: user, text: user, value: user});
-          });
-          this.setState({users, loading: false});
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    } else {
-      API.getData('movies')
-        .then(data => {
-          let movies = [];
-          for (const movie in data) {
-            movies.push({key: movie, text: data[movie].title, value: movie});
-          }
-          this.setState({movies, loading: false});
+          this.setState({recommendations: data.recommendations, loading: false});
         })
         .catch(err => {
           console.log(err);
@@ -113,7 +76,7 @@ class App extends Component {
   }
 
   render() {
-    const {users, movies, recommendations, similarity, loading, filtering} = this.state;
+    const {users, recommendations, similarity, loading, filtering} = this.state;
     let rows = [];
     if (recommendations) {
       recommendations.forEach(rec => {
@@ -139,8 +102,7 @@ class App extends Component {
             <h1 className="App-title">MovieMachine</h1>
           </div>
           <div className="App-menu">
-            {filtering === 'users' && <Dropdown onChange={this.selectUser} placeholder='User ID' search selection options={users} />}
-            {filtering === 'movies' && <Dropdown onChange={this.selectMovie} placeholder='Movie ID' search selection options={movies} />}
+            <Dropdown onChange={this.selectUser} placeholder='User ID' search selection options={users} />
             <div className="similarity-selector">
               <Form>
                 <Form.Field>
@@ -172,8 +134,8 @@ class App extends Component {
                     radio
                     label='User Based'
                     name='checkboxRadioGroup'
-                    value='users'
-                    checked={filtering === 'users'}
+                    value='user'
+                    checked={filtering === 'user'}
                     onChange={this.selectFiltering}
                   />
                 </Form.Field>
@@ -182,8 +144,8 @@ class App extends Component {
                     radio
                     label='Item Based'
                     name='checkboxRadioGroup'
-                    value='movies'
-                    checked={filtering === 'movies'}
+                    value='item'
+                    checked={filtering === 'item'}
                     onChange={this.selectFiltering}
                   />
                 </Form.Field>
