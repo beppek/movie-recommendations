@@ -20,7 +20,7 @@ def euclidean_distance(prefs, p1, p2):
     similar_items = {}
     for item in prefs[p1]:
         if item in prefs[p2]:
-            similar_items[item] = 1
+            similar_items[item] = 1.0
 
     #no ratings in common
     if len(similar_items) == 0: return 0
@@ -28,7 +28,7 @@ def euclidean_distance(prefs, p1, p2):
     #square the differences
     sum_of_squares = sum([pow(prefs[p1][item]['rating'] - prefs[p2][item]['rating'], 2) for item in similar_items])
 
-    return 1 / (1 + sqrt(sum_of_squares))
+    return 1.0 / (1.0 + sqrt(sum_of_squares))
 
 def pearson_correlation(prefs, p1, p2):
     """Calculates pearson correlation for 2 people
@@ -46,7 +46,7 @@ def pearson_correlation(prefs, p1, p2):
     similar_items = {}
     for item in prefs[p1]:
         if item in prefs[p2]:
-            similar_items[item] = 1
+            similar_items[item] = 1.0
 
     #number of elements
     n = len(similar_items)
@@ -156,3 +156,34 @@ def transform_prefs(prefs):
             result[title] = movie
 
     return result
+
+def get_recommended_items(prefs, item_match, user):
+    """Gets recommended items for a user from item based dataset"""
+
+    user_ratings = prefs[user]
+    scores = {}
+    total_sim = {}
+
+    #Items rated by the user
+    for (item, movie) in user_ratings.items():
+        rating = movie['rating']
+        #Similar items
+        for (item2, movie2) in item_match[item].items():
+            if item2 in user_ratings: continue
+
+            similarity = movie2['similarity']
+
+            #Weighted sum of ratings times similarity
+            title = movie2['title']
+            scores.setdefault(title, 0)
+            scores[title] += similarity * rating
+
+            #sum all similarities
+            total_sim.setdefault(title, 0)
+            total_sim[title] += similarity
+
+    rankings = [(score/total_sim[item], item) for item, score in scores.items() if total_sim[item] != 0]
+
+    rankings.sort(key=lambda x: x[0])
+    rankings.reverse()
+    return {'recommendations': rankings}
