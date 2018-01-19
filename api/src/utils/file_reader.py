@@ -78,16 +78,16 @@ def read_item_based_data(sim, sim_method, prefs):
             ratingsreader = csv.DictReader(csvfile)
             for row in ratingsreader:
                 title = row['title']
-                otherTitle = row['otherTitle']
+                other_title = row['otherTitle']
                 similarity = float(row['similarity'])
                 try:
                     movie = ratings[title]
                 except KeyError:
                     movie = dict({})
 
-                movie[otherTitle] = {
+                movie[other_title] = {
                     'similarity': similarity,
-                    'title': otherTitle
+                    'title': other_title
                 }
                 ratings[title] = movie
 
