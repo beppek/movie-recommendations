@@ -93,7 +93,6 @@ def read_item_based_data(sim, sim_method, prefs):
 
     #Write file with item based ratings
     else:
-        # user_ratings = read_ratings()
         ratings = calc_similar_items(prefs, filepath, 10, sim_method)
 
     return ratings
@@ -114,7 +113,6 @@ def calc_similar_items(prefs, filepath, n=10, similarity=euclidean_distance):
         writer = csv.writer(csvfile)
         writer.writerow(['title', 'otherTitle', 'similarity'])
         for item in item_prefs:
-            user_id = list(item_prefs[item].keys())[0]
             c += 1
             # log progress
             if c%100 == 0:
