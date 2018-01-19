@@ -8,7 +8,7 @@ from utils.similarity_calculator import transform_prefs, euclidean_distance, top
 
 DATA_FOLDER = './data'
 
-def read_ratings():
+def read_ratings(filename):
     """Reads the CSV files and builds dict with movie ratings for all users and adds the movie title to the data.
 
     Returns:
@@ -16,9 +16,13 @@ def read_ratings():
     """
 
     ratings = dict({})
-    movies = read_movies()
+    if filename == 'ratings.csv':
+        moviefilename = 'movies.csv'
+    elif filename == 'ratingstest.csv':
+        moviefilename = 'moviestest.csv'
+    movies = read_movies(moviefilename)
 
-    with open(os.path.join(DATA_FOLDER, 'ratings.csv'), newline='') as csvfile:
+    with open(os.path.join(DATA_FOLDER, filename), newline='') as csvfile:
         ratingsreader = csv.DictReader(csvfile)
         for row in ratingsreader:
             user_id = row['userId']
@@ -37,9 +41,9 @@ def read_ratings():
 
     return ratings
 
-def read_movies():
+def read_movies(filename):
     movies = dict({})
-    with open(os.path.join(DATA_FOLDER, 'movies.csv'), newline='') as moviesfile:
+    with open(os.path.join(DATA_FOLDER, filename), newline='') as moviesfile:
         moviesreader = csv.DictReader(moviesfile)
         for row in moviesreader:
             movies[row['movieId']] = {'title': row['title']}
@@ -57,7 +61,7 @@ def read_users():
 
     return list(users.keys())
 
-def read_item_based_data(similarity, sim_method):
+def read_item_based_data(sim, sim_method, prefs):
     """Reads the CSV files and builds dict with item based collaborative filtering ratings
 
     Returns:
@@ -66,31 +70,31 @@ def read_item_based_data(similarity, sim_method):
 
     ratings = dict({})
 
-    filepath = os.path.join(DATA_FOLDER, 'itemratings'+similarity+'.csv')
+    filepath = os.path.join(DATA_FOLDER, 'itemratings'+sim+'.csv')
 
-    #Check for file with item based ratings and read
+    # Check for file with item based ratings and read
     if os.path.isfile(filepath):
         with open(filepath, newline='') as csvfile:
             ratingsreader = csv.DictReader(csvfile)
             for row in ratingsreader:
                 title = row['title']
+                otherTitle = row['otherTitle']
                 similarity = float(row['similarity'])
-                user_id = row['userId']
                 try:
                     movie = ratings[title]
                 except KeyError:
                     movie = dict({})
 
-                movie[user_id] = {
+                movie[otherTitle] = {
                     'similarity': similarity,
-                    'title': title
+                    'title': otherTitle
                 }
                 ratings[title] = movie
 
     #Write file with item based ratings
     else:
-        user_ratings = read_ratings()
-        ratings = calc_similar_items(user_ratings, filepath, 10, sim_method)
+        # user_ratings = read_ratings()
+        ratings = calc_similar_items(prefs, filepath, 10, sim_method)
 
     return ratings
 
@@ -108,7 +112,7 @@ def calc_similar_items(prefs, filepath, n=10, similarity=euclidean_distance):
     c = 0
     with open(filepath, 'w') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['title', 'userId', 'otherTitle', 'similarity'])
+        writer.writerow(['title', 'otherTitle', 'similarity'])
         for item in item_prefs:
             user_id = list(item_prefs[item].keys())[0]
             c += 1
@@ -123,15 +127,15 @@ def calc_similar_items(prefs, filepath, n=10, similarity=euclidean_distance):
                 sim_score = score[0]
 
                 #Write to file
-                writer.writerow([item, user_id, title, sim_score])
+                writer.writerow([item, title, sim_score])
 
                 #Build movie dict for the current user
                 try:
-                    movie = result[title]
+                    movie = result[item]
                 except KeyError:
                     movie = dict({})
 
-                movie[user_id] = {
+                movie[title] = {
                     'similarity': sim_score,
                     'title': title
                 }
