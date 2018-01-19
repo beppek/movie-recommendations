@@ -128,6 +128,8 @@ def get_recommendations(prefs, person, similarity, n = 20):
                 sim_sums.setdefault(item, 0.0)
                 sim_sums[item] += sim
 
+    # rankings = [(total / sim_sums[item], item) for item, total in totals.items()]
+
     maximum = max(totals.values())
     rankings = [(total / maximum * 5, item) for item, total in totals.items()]
 
@@ -135,27 +137,6 @@ def get_recommendations(prefs, person, similarity, n = 20):
     rankings.reverse()
     return {'recommendations': rankings[0:n]}
 
-def transform_prefs(prefs):
-    """transforms ratings to be item based"""
-
-    result = {}
-    for person in prefs:
-        user_id = person
-        for item in prefs[person]:
-            title = prefs[person][item]['title']
-            rating = prefs[person][item]['rating']
-            try:
-                movie = result[title]
-            except KeyError:
-                movie = dict({})
-
-            movie[user_id] = {
-                'rating': rating,
-                'title': title
-            }
-            result[title] = movie
-
-    return result
 
 def get_recommended_items(prefs, item_match, user):
     """Gets recommended items for a user from item based dataset"""
@@ -169,21 +150,36 @@ def get_recommended_items(prefs, item_match, user):
         rating = movie['rating']
         #Similar items
         for (item2, movie2) in item_match[item].items():
-            if item2 in user_ratings: continue
+            #Skip already rated movies
+            if item2 not in user_ratings:
+                similarity = movie2['similarity']
 
-            similarity = movie2['similarity']
+                #Weighted sum of ratings times similarity
+                title = movie2['title']
+                scores.setdefault(title, 0)
+                scores[title] += rating * similarity
 
-            #Weighted sum of ratings times similarity
-            title = movie2['title']
-            scores.setdefault(title, 0)
-            scores[title] += similarity * rating
+                #sum all similarities
+                total_sim.setdefault(title, 0)
+                total_sim[title] += similarity
 
-            #sum all similarities
-            total_sim.setdefault(title, 0)
-            total_sim[title] += similarity
+    # rankings = [(score/total_sim[item], item) for item, score in scores.items() if total_sim[item] != 0]
 
-    rankings = [(score/total_sim[item], item) for item, score in scores.items() if total_sim[item] != 0]
+    maximum = max(scores.values())
+    rankings = [(score / maximum * 5, item) for item, score in scores.items()]
 
     rankings.sort(key=lambda x: x[0])
     rankings.reverse()
     return {'recommendations': rankings}
+
+
+def transform_prefs(prefs):
+    """transforms ratings to be item based"""
+
+    result = {}
+    for person in prefs:
+        for item in prefs[person]:
+            result.setdefault(item, {})
+            result[item][person]=prefs[person][item]
+
+    return result
